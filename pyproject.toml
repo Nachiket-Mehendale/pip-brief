@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pip-brief"
+version = "0.3.0"
+description = "A clean, human-readable summary for pip install output"
+authors = [
+    { name="Nachiket Mehendale" }
+]
+dependencies = []
+readme = "README.md"
+license = { file="LICENSE" }
+
+[project.scripts]
+pip-brief = "pip_brief.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/nachiketmehendale/pip-brief"
+Repository = "https://github.com/nachiketmehendale/pip-brief"
