@@ -1,17 +1,22 @@
 import argparse
 import sys
+import subprocess
 from pip_brief.core import run_pip_install, parse_pip_output, format_summary
+from pip_brief.core import run_pip_uninstall, parse_uninstall_output, format_uninstall_summary
 
 def main():
-    parser = argparse.ArgumentParser(description="pip-brief: A clean summary for pip install")
+    parser = argparse.ArgumentParser(description="pip-brief: A clean summary for pip install/uninstall")
     
-    # Add subcommands
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
     
-    # Install command
-    install_parser = subparsers.add_parser('install', help='Install packages with brief summary')
-    install_parser.add_argument('packages', nargs='+', help='Package name(s) to install')
-    install_parser.add_argument('--verbose', action='store_true', help='Show full pip output')
+    install_parser = subparsers.add_parser('install', help='Install packages')
+    install_parser.add_argument('packages', nargs='+', help='Package name(s)')
+    install_parser.add_argument('--verbose', action='store_true', help='Show full output')
+    
+    uninstall_parser = subparsers.add_parser('uninstall', help='Uninstall packages')
+    uninstall_parser.add_argument('packages', nargs='+', help='Package name(s)')
+    uninstall_parser.add_argument('--yes', '-y', action='store_true', help='Skip confirmation')
+    uninstall_parser.add_argument('--verbose', action='store_true', help='Show full output')
     
     args = parser.parse_args()
     
@@ -21,20 +26,26 @@ def main():
     
     if args.command == 'install':
         if args.verbose:
-            # For verbose mode, install all packages together and show raw output
             raw_output = run_pip_install(args.packages)
             print(raw_output)
         else:
-            # For brief mode, install each package separately and show individual summaries
             for i, package in enumerate(args.packages):
                 raw_output = run_pip_install([package])
                 parsed = parse_pip_output(raw_output)
                 summary = format_summary(parsed, package)
                 print(summary)
-                
-                # Add spacing between package summaries (except for the last one)
                 if i < len(args.packages) - 1:
                     print("\n" + "="*50 + "\n")
+    
+    elif args.command == 'uninstall':
+        if args.yes:
+            raw_output = run_pip_uninstall(args.packages, auto_confirm=True)
+            parsed = parse_uninstall_output(raw_output)
+            summary = format_uninstall_summary(parsed, args.packages)
+            print(summary)
+        else:
+            subprocess.run(["pip", "uninstall"] + args.packages, text=True)
+
 
 if __name__ == "__main__":
     main()

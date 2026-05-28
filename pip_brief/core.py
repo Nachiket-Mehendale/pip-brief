@@ -198,3 +198,77 @@ def format_summary(data, package_name):
         lines.pop()
     
     return "\n".join(lines)
+
+# Added new functions for uninstall command
+
+def run_pip_uninstall(packages, auto_confirm=False):
+    """Run pip uninstall command"""
+    if isinstance(packages, str):
+        packages = [packages]
+    
+    cmd = ["pip", "uninstall"] + packages
+    if auto_confirm:
+        cmd.append("-y")
+    
+    result = subprocess.run(cmd, text=True)
+    return ""
+
+
+def parse_uninstall_output(output):
+    """Parse pip uninstall output"""
+    lines = output.splitlines()
+    uninstalled = []
+    errors = []
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        
+        if "Successfully uninstalled" in line:
+            match = re.search(r"Successfully uninstalled (.+)", line)
+            if match:
+                packages_raw = match.group(1).split(", ")
+                uninstalled.extend(packages_raw)
+        
+        elif "not installed" in line.lower():
+            if line not in errors:
+                errors.append(line)
+    
+    return {"uninstalled": uninstalled, "errors": errors}
+
+
+def format_uninstall_summary(data, package_names):
+    """Format uninstall summary"""
+    lines = []
+    
+    if isinstance(package_names, list):
+        if len(package_names) == 1:
+            title = f"Summary of {package_names[0]} uninstall:"
+        else:
+            title = f"Summary of {len(package_names)} packages uninstall:"
+    else:
+        title = f"Summary of {package_names} uninstall:"
+    
+    underline = "=" * len(title)
+    lines.append(f"{Colors.BOLD}{Colors.CYAN}{title}{Colors.END}")
+    lines.append(underline)
+    lines.append("")
+    
+    point_number = 1
+    
+    if data["uninstalled"]:
+        lines.append(f"{point_number}) Uninstalled:")
+        lines.append(", ".join(data["uninstalled"]))
+        lines.append("")
+        lines.append("")
+        point_number += 1
+    
+    if data["errors"]:
+        lines.append(f"{point_number}) Errors:")
+        lines.append(", ".join(data["errors"]))
+    
+    while lines and lines[-1] == "":
+        lines.pop()
+    
+    return "\n".join(lines)
